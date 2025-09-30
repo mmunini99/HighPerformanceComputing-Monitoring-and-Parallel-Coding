@@ -1,7 +1,9 @@
 # HighPerformanceComputing-Monitoring-and-Parallel-Coding
 
 
-In this repository there is all the necessary code for **PROJECT 1 :** *Comparison between OpenMPI algorithms for collective operation* and for **PROJECT 2 :** *Mandelbrot set implementation with a hybrid MPI+OpenMP code*.
+In this repository there is all the necessary code for two HPC project:
+- **PROJECT 1 :** *Comparison between OpenMPI algorithms for collective operation*
+- **PROJECT 2 :** *Mandelbrot set implementation with a hybrid MPI+OpenMP code*.
 
 ## Initial Set up
 These projects have been run in Orfeo cluster. So, the first the user needs to do once logged in into Orfeo is to:
