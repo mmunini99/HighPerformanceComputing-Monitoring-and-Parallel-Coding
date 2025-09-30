@@ -25,6 +25,8 @@ cd Project\ 2/source_code/
 bash get_structured_folder.sh # this will create the folder structure
 ```
 
+For *Project 2* the user should create a folder photo and move the pmg inside it, since they are created in source_code folder. Photo, as well as osu benchmark folder are added in the gitingore. Here I provided the pmg on zip fodler.
+
 ## How to run a job on Orfeo
 
 To run a job and let it be scheduled by slurm, the user needs to run the following command:
