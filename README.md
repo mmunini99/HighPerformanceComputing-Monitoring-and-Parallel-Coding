@@ -37,7 +37,7 @@ sbatch file.sh
 For this task it has been compared **Broadcast** and **Reduce** algorithms and specifically for each of one of these algorithms there is a version with fixed and variable size. For each of these algorithms, both for kind of size, three types of algorithm implementation have been tested
 - **Broadcast**: 
   - Algo 1: Basic Linear (type 1 in osu library)
-  - Algo 2: Pipeline (type 3 in osu library)
+  - Algo 2: Pipeline (type 3 in osu library)  --> here the user will find two bash files, since for time constraint it was not possible to complete the job.
   - Algo 3: Binary Tree (type 5 in osu library)
 - **Reduce**:
   - Algo 1: Linear (type 1 in osu library)
@@ -49,7 +49,7 @@ For this task it has been compared **Broadcast** and **Reduce** algorithms and s
 For developing a strategy for Mandelbrot Set Parallelization, an **Hybrid MPI** + **OpenMP** strategy has been defined and three version have been tried: by splitting the image on columns, then on rows and finally as an extra, a final trial tentative hierarchical using 2D block decomposition + cyclic pixel distribution (I was curious on how to (try) to improve the algorithms used before).
 
 
-For all the projects there is an analysis done in Python and a report.
+For all the projects there is an analysis done in Python and a report. In the presentation will be highlighted a problem found during the development.
 
 
 ## The structure of the folder:
