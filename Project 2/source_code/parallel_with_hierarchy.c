@@ -7,9 +7,13 @@
  */
 
 #include <stdio.h>
+
 #include <stdlib.h>
+
 #include <math.h>
+
 #include <mpi.h>
+
 #include <omp.h>
 
 
@@ -98,7 +102,7 @@ int main(int argc, char *argv[])
 
     if (argc != 9) {
 
-        if (process_id == 0) fprintf(stderr, "Usage: %s width height x_min y_min x_max y_max max_iter threads\n", argv[0]);
+        if (process_id == 0) fprintf(stderr, "incorrect arguments\n");
 
         MPI_Finalize();
 
@@ -176,23 +180,9 @@ int main(int argc, char *argv[])
 
     if (!local_buffer) {
 
-        fprintf(stderr, "Memory allocation failed on process %d\n", process_id);
-
         MPI_Finalize();
 
         return 1;
-
-    }
-
-    
-
-    if (process_id == 0) {
-
-        printf("Process grid: %dx%d\n", px, py);
-
-        printf("Image: %dx%d, Block size: %dx%d (approx)\n", 
-
-               img_width, img_height, base_block_width, base_block_height);
 
     }
 
@@ -296,8 +286,6 @@ int main(int argc, char *argv[])
 
         if (!final_image || !receive_sizes || !displacements) {
 
-            fprintf(stderr, "Memory allocation failed on master process\n");
-
             MPI_Finalize();
 
             return 1;
@@ -351,8 +339,6 @@ int main(int argc, char *argv[])
         unsigned char *reconstructed_image = (unsigned char *)malloc(img_width * img_height);
 
         
-
-        int block_idx = 0;
 
         for (int proc = 0; proc < total_processes; ++proc) {
 
@@ -410,25 +396,7 @@ int main(int argc, char *argv[])
 
         
 
-        // Performance statistics
-
-        printf("=== HIERARCHICAL PARALLELIZATION RESULTS ===\n");
-
-        printf("Process grid: %dx%d (%d processes)\n", px, py, total_processes);
-
-        printf("Threads per process: %d\n", thread_count);
-
-        printf("Total parallel units: %d\n", total_processes * thread_count);
-
-        printf("Image size: %dx%d = %d pixels\n", img_width, img_height, img_width * img_height);
-
-        printf("Computation time: %.6f seconds\n", computation_time);
-
-        printf("Pixels per second: %.2f million\n", (img_width * img_height) / (computation_time * 1e6));
-
-        
-
-        /* --------------- TIMING OUTPUT FOR EXPERIMENTS --------------- */
+        /* --------------- TIMING OUTPUT ONLY --------------- */
 
         printf("%.6f\n", computation_time);
 
