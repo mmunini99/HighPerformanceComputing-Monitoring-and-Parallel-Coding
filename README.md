@@ -44,12 +44,10 @@ For this task it has been compared **Broadcast** and **Reduce** algorithms and s
 
 
 ## Project 2: 
-For developing a strategy for Mandelbrot Set Parallelization, an **Hybrid MPI** + **OpenMP** strategy has been defined and three version have been tried: by splitting the image on columns, then on rows and finally as final trial
-  - Row-wise distribution
-  - Column-wise distribution  
-  - Pixel-wise distribution
-- **Scaling Analysis**: Both strong and weak scaling studies for all implementations
-- **Visualization**: Comprehensive performance plots and generated Mandelbrot images
+For developing a strategy for Mandelbrot Set Parallelization, an **Hybrid MPI** + **OpenMP** strategy has been defined and three version have been tried: by splitting the image on columns, then on rows and finally as an extra, a final trial tentative hierarchical using 2D block decomposition + cyclic pixel distribution (I was curious on how to (try) to improve the algorithms used before).
+
+
+For all the projects there is an analysis done in Python and a report.
 
 
 ## The structure of the folder:
