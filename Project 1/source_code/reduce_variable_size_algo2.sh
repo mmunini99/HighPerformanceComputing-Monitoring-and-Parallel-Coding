@@ -26,7 +26,7 @@ do
 	for size_idx_dim in {1..10} # Looping from 2 --> 1024
 	do
 		size=$((2**size_idx_dim)) # variable dimension
-		result_allreduce2=$(mpirun --map-by core -np $number_processes --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_reduce_algorithm 2 $OSU_REDUCE -m $size -x $N_replica -i $N_replica | tail -n 1 | awk '{print $2}')
+		result_allreduce2=$(mpirun --map-by core -np $number_processes --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_reduce_algorithm 5 $OSU_REDUCE -m $size -x $N_replica -i $N_replica | tail -n 1 | awk '{print $2}')
 		echo "$number_processes,$size,$result_allreduce2" >> ../output/reduce_var/reduce_algo2_variable_core.csv
 	done
 done	

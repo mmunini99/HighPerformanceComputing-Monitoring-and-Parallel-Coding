@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
+import math
 import matplotlib.pyplot as plt
+from matplotlib import cm
+from scipy.interpolate import griddata
 
 def build_intercore_latency_matrix(n_cores=256):
     """
@@ -43,17 +46,18 @@ def build_intercore_latency_matrix(n_cores=256):
 
 # PLOT 
 
-def theory_and_experiment_plot(data_exp, data_theory, title_name, position):
+def theory_and_experiment_plot(data_exp, data_theory, title_name, position, factor=1):
     
     plt.figure(figsize=(14, 8))
 
     # Extract experimental data
     experimental_processes = data_exp['idx_process']
-    experimental_latency = data_exp['Latency']
+    experimental_latency = data_exp['Latency']*factor
 
     # Extract model predictions
     model_processes = list(data_theory.keys())
     model_latency = list(data_theory.values())
+    model_latency = [factor*j for j in model_latency]
 
     # Plot experimental results
     plt.plot(experimental_processes, experimental_latency, 
@@ -199,6 +203,93 @@ def plot_errors(data_exp,  data_theory, position1, position2):
     plt.tight_layout()
     plt.show()
 
+
+
+
+def map3d_grid(df, title="3D Surface Plot"):
+    """
+    Create a 3D surface plot for MPI broadcast latency data
+    
+    Parameters:
+    df: DataFrame with columns 'number_processes', 'Size', 'Latency'
+    title: Plot title
+    """
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    
+    # Extract data
+    processes = df['number_processes'].values
+    sizes = df['Size'].values
+    latency = df['Latency'].values
+    
+    # Create grid for interpolation
+    processes_unique = np.sort(df['number_processes'].unique())
+    sizes_unique = np.sort(df['Size'].unique())
+    
+    # Create meshgrid
+    P, S = np.meshgrid(processes_unique, sizes_unique)
+    
+    # Try different interpolation methods if cubic fails
+    try:
+        L = griddata((processes, sizes), latency, (P, S), method='cubic')
+        # Fill NaN values with linear interpolation
+        if np.isnan(L).any():
+            L_linear = griddata((processes, sizes), latency, (P, S), method='linear')
+            mask = np.isnan(L)
+            L[mask] = L_linear[mask]
+    except:
+        # Fallback to linear interpolation
+        L = griddata((processes, sizes), latency, (P, S), method='linear')
+    
+    # Only plot surface if we have valid interpolated data
+    if not np.isnan(L).all():
+        surf = ax.plot_surface(P, S, L, cmap=cm.plasma, alpha=0.7, edgecolor='none')
+        fig.colorbar(surf, shrink=0.5, aspect=5, label='Latency (μs)')
+    
+    # Add thin lines connecting data points for texture
+    for proc in processes_unique:
+        proc_mask = processes == proc
+        if np.sum(proc_mask) > 1:
+            proc_sizes = sizes[proc_mask]
+            proc_latency = latency[proc_mask]
+            sort_idx = np.argsort(proc_sizes)
+            ax.plot(np.full(len(sort_idx), proc), proc_sizes[sort_idx], proc_latency[sort_idx], 
+                   color='navy', alpha=0.5, linewidth=1.0)
+    
+    for size in sizes_unique:
+        size_mask = sizes == size
+        if np.sum(size_mask) > 1:
+            size_processes = processes[size_mask]
+            size_latency = latency[size_mask]
+            sort_idx = np.argsort(size_processes)
+            ax.plot(size_processes[sort_idx], np.full(len(sort_idx), size), size_latency[sort_idx], 
+                   color='navy', alpha=0.5, linewidth=1.0)
+    
+    # Add scatter points for actual measurements
+    ax.scatter(processes, sizes, latency, 
+              c='cyan',
+              s=80,
+              alpha=0.9, 
+              edgecolor='darkblue',
+              linewidth=1.5,
+              marker='o',
+              depthshade=True)
+    
+    # Labels and title
+    ax.set_xlabel('Process Count', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Message Size (Bytes)', fontsize=12, fontweight='bold')
+    ax.set_zlabel('Latency (μs)', fontsize=12, fontweight='bold')
+    ax.set_title(title, fontsize=14, fontweight='bold', pad=20)
+    
+    # Better viewing angle - adjusted for clearer view
+    ax.view_init(elev=30, azim=135)
+    
+    # Add grid
+    ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.show()
+
 # THEORETICAL MODEL
 def compute_linear_broadcast_time(comm_latency_matrix, process_count, source_rank, processing_overhead):
     """
@@ -321,3 +412,40 @@ def compute_binary_tree_broadcast_latency(comm_matrix, process_count, processing
     total_latency = max_latency + total_overhead
     
     return total_latency
+
+
+def binary_tree_reduce_latency(matrix_times, num_cores, root=0):
+    """
+    Compute total reduce latency using a binary tree algorithm.
+
+    Parameters
+    ----------
+    latency_matrix : 2D numpy array
+        latency_matrix[i,j] = latency from process i to process j
+    P : int
+        number of processes
+    root : int
+        root of the reduction (default 0)
+
+    Returns
+    -------
+    float
+        total reduce latency
+    """
+    rounds = math.ceil(math.log2(num_cores))
+    total_latency = 0.0
+
+    for r in range(rounds):
+        block = 2 ** (r + 1)
+        half = 2 ** r
+        round_latencies = []
+        for base in range(0, num_cores, block):
+            recv = base
+            send = base + half
+            if send < num_cores:
+                round_latencies.append(matrix_times[send, recv])
+        if round_latencies:
+            total_latency += max(round_latencies)
+
+    return total_latency
+

@@ -42,9 +42,9 @@ For this task it has been compared **Broadcast** and **Reduce** algorithms and s
   - Algo 2: Pipeline (type 3 in osu library)  --> here the user will find two bash files, since for time constraint it was not possible to complete the job.
   - Algo 3: Binary Tree (type 5 in osu library)
 - **Reduce**:
-  - Algo 1: Linear (type 1 in osu library)
-  - Algo 2: Chain (type 2 in osu library)
-  - Algo 3: Binary (type 4 in osu library)
+  - Algo 1: Binary (type 4 in osu library)
+  - Algo 2: Binomial (type 5 in osu library)
+  - Algo 3: Rabenseifner (type 7 in osu library)
 
 
 ## Project 2: 

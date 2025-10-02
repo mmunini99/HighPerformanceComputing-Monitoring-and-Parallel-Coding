@@ -25,7 +25,7 @@ echo "idx_process,dimension_size,Latency" > ../output/reduce_fixed/reduce_algo2_
 for idx_process in {2..256} # from 2 to 256 tasks (128 per node)
 do
     # Perform osu_allreduce with current processors, fixed message dimension_size and fixed number of N_replica
-    result_allreduce2=$(mpirun --map-by core -np $idx_process --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_reduce_algorithm 2 $OSU_REDUCE -m $dimension_size -x $N_replica -i $N_replica | tail -n 1 | awk '{print $2}') # osu_allreduce with current processors, fixed message dimension_size and fixed number of N_replica
+    result_allreduce2=$(mpirun --map-by core -np $idx_process --mca coll_tuned_use_dynamic_rules true --mca coll_tuned_reduce_algorithm 5 $OSU_REDUCE -m $dimension_size -x $N_replica -i $N_replica | tail -n 1 | awk '{print $2}') # osu_allreduce with current processors, fixed message dimension_size and fixed number of N_replica
     echo "$idx_process,$dimension_size,$result_allreduce2" >> ../output/reduce_fixed/reduce_algo2_fixed_core.csv # CSV file to store results
 done
 # end algo 2
