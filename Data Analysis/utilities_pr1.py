@@ -107,10 +107,10 @@ def theory_and_experiment_plot(data_exp, data_theory, title_name, position, fact
     plt.show()
 
 
-def plot_errors(data_exp,  data_theory, position1, position2):
+def plot_errors(data_exp,  data_theory, overtitle, position1, position2):
     # Create comprehensive error analysis visualization
     fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(18, 7))
-    fig.suptitle('Linear Broadcast: Model Error Analysis', fontsize=16, fontweight='bold', y=1.00)
+    fig.suptitle(overtitle+': Model Error Analysis', fontsize=16, fontweight='bold', y=1.00)
 
     # Extract experimental data
     experimental_processes = data_exp['idx_process'].values
@@ -413,39 +413,98 @@ def compute_binary_tree_broadcast_latency(comm_matrix, process_count, processing
     
     return total_latency
 
-
-def binary_tree_reduce_latency(matrix_times, num_cores, root=0):
+def binary_tree_reduce_latency(matrix_times, num_cores):
     """
-    Compute total reduce latency using a binary tree algorithm.
-
-    Parameters
-    ----------
-    latency_matrix : 2D numpy array
-        latency_matrix[i,j] = latency from process i to process j
-    P : int
-        number of processes
-    root : int
-        root of the reduction (default 0)
-
-    Returns
-    -------
-    float
-        total reduce latency
+    Binary Tree Reduce: At each level, multiple pairs communicate in parallel.
+    Takes the max latency at each level (bottleneck).
+    
+    Formula: T_binary(P) = sum over levels of max{latency(r + 2^i -> r)}
     """
-    rounds = math.ceil(math.log2(num_cores))
-    total_latency = 0.0
-
-    for r in range(rounds):
-        block = 2 ** (r + 1)
-        half = 2 ** r
-        round_latencies = []
-        for base in range(0, num_cores, block):
-            recv = base
-            send = base + half
-            if send < num_cores:
-                round_latencies.append(matrix_times[send, recv])
-        if round_latencies:
-            total_latency += max(round_latencies)
-
+    if num_cores <= 1:
+        return 0
+    
+    total_latency = 0
+    num_levels = int(math.log2(num_cores))
+    
+    for level in range(num_levels):
+        step_size = 2 ** level
+        level_latencies = []
+        
+        # At each level, find all communicating pairs
+        for receiver_rank in range(0, num_cores, 2 * step_size):
+            sender_rank = receiver_rank + step_size
+            if sender_rank < num_cores:
+                level_latencies.append(matrix_times[sender_rank][receiver_rank])
+        
+        # The slowest communication at this level dominates
+        if level_latencies:
+            total_latency += max(level_latencies)
+    
     return total_latency
 
+
+def binomial_tree_reduce_latency(matrix_times, num_cores):
+    """
+    Binomial Tree Reduce: At each step i, rank 2^i sends directly to root (rank 0).
+    Sequential communications to the root.
+    
+    Formula: T_binomial(P) = sum of latency(2^i -> 0)
+    """
+    if num_cores <= 1:
+        return 0
+    
+    total_latency = 0
+    num_steps = int(math.log2(num_cores))
+    
+    for step in range(num_steps):
+        sender_rank = 2 ** step
+        root_rank = 0
+        total_latency += matrix_times[sender_rank][root_rank]
+    
+    return total_latency
+
+
+
+def rabenseifner_reduce_latency(matrix_times, num_cores):
+    """
+    Rabenseifner's Reduce: Two-phase algorithm
+    Phase 1: Reduce-Scatter (recursive halving)
+    Phase 2: Allgather (recursive doubling/binomial tree)
+    
+    At each phase level, takes max latency across parallel communications.
+    """
+    if num_cores <= 1:
+        return 0
+    
+    total_latency = 0
+    num_levels = int(math.log2(num_cores))
+    
+    # Phase 1: Reduce-Scatter (recursive halving)
+    for level in range(num_levels):
+        step_size = 2 ** level
+        phase1_latencies = []
+        
+        for rank in range(0, num_cores, 2 * step_size):
+            partner_rank = rank + step_size
+            if partner_rank < num_cores:
+                # Bidirectional communication, use one direction as proxy
+                phase1_latencies.append(matrix_times[rank][partner_rank])
+        
+        if phase1_latencies:
+            total_latency += max(phase1_latencies)
+    
+    # Phase 2: Allgather (binomial tree gather)
+    for level in range(num_levels):
+        step_size = 2 ** level
+        phase2_latencies = []
+        
+        for rank in range(0, num_cores, 2 * step_size):
+            sender_rank = rank + step_size
+            receiver_rank = rank
+            if sender_rank < num_cores:
+                phase2_latencies.append(matrix_times[sender_rank][receiver_rank])
+        
+        if phase2_latencies:
+            total_latency += max(phase2_latencies)
+    
+    return total_latency
