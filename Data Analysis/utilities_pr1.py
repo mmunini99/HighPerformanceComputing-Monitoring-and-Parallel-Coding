@@ -45,33 +45,27 @@ def build_intercore_latency_matrix(n_cores=256):
     return latencies
 
 # PLOT 
-
-def theory_and_experiment_plot(data_exp, data_theory, title_name, position, factor=1):
+def theory_and_experiment_plot_with_errors(data_exp, data_theory, title_name, position_main='best', position_abs='upper left', position_rel='lower right'):
     
-    plt.figure(figsize=(14, 8))
+    fig, (ax0, ax1, ax2) = plt.subplots(1, 3, figsize=(24, 7))
+    fig.suptitle(title_name + ': Model Analysis', fontsize=16, fontweight='bold', y=0.98)
 
     # Extract experimental data
-    experimental_processes = data_exp['idx_process']
-    experimental_latency = data_exp['Latency']*factor
+    experimental_processes = data_exp['idx_process'].values
+    experimental_latency = data_exp['Latency'].values
 
     # Extract model predictions
     model_processes = list(data_theory.keys())
     model_latency = list(data_theory.values())
-    model_latency = [factor*j for j in model_latency]
+    
+    # Aligned model predictions for error calculation
+    model_latency_aligned = [data_theory[n] for n in experimental_processes]
 
-    # Plot experimental results
-    plt.plot(experimental_processes, experimental_latency, 
-            marker='o', linestyle='--', linewidth=2,
-            label='Experimental Data', 
-            color='#2E86AB', markersize=6, markerfacecolor='white', 
-            markeredgewidth=2.5, alpha=0.85)
+    # Calculate errors
+    absolute_error = [model - exp for model, exp in zip(model_latency_aligned, experimental_latency)]
+    relative_error = [(model - exp) / exp * 100 for model, exp in zip(model_latency_aligned, experimental_latency)]
 
-    # Plot model predictions
-    plt.plot(model_processes, model_latency, 
-            linewidth=3, label='Analytical Model', 
-            color='#A23B72', alpha=0.9)
-
-    # Hardware topology boundaries with larger labels
+    # Hardware topology boundaries
     topology_markers = [
         (1, 'Core 1\nSame CCX', '#E8E8E8'),
         (4, 'Core 4\nSame CCD', '#D0D0D0'),
@@ -81,102 +75,44 @@ def theory_and_experiment_plot(data_exp, data_theory, title_name, position, fact
         (128, 'Core 128\nInter-Node', '#606060')
     ]
 
+    # ===========================
+    # Plot 0: Model vs Experimental
+    # ===========================
+    ax0.plot(experimental_processes, experimental_latency, 
+            marker='o', linestyle='--', linewidth=2,
+            label='Experimental Data', 
+            color='#2E86AB', markersize=6, markerfacecolor='white', 
+            markeredgewidth=2.5, alpha=0.85)
+
+    ax0.plot(model_processes, model_latency, 
+            linewidth=3, label='Analytical Model', 
+            color='#A23B72', alpha=0.9)
+
     for core_id, label, color in topology_markers:
-        plt.axvline(x=core_id, color=color, linestyle=':', linewidth=2.5, alpha=0.7)
-        plt.text(core_id, plt.ylim()[1] * 0.97, label, 
+        ax0.axvline(x=core_id, color=color, linestyle=':', linewidth=2.5, alpha=0.7)
+        ax0.text(core_id, ax0.get_ylim()[1] * 0.97, label, 
                 rotation=90, verticalalignment='top', horizontalalignment='right',
-                fontsize=11, fontweight='bold', alpha=0.8, color=color,
+                fontsize=10, fontweight='bold', alpha=0.8, color=color,
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white', alpha=0.7, edgecolor=color))
 
-    # Styling
-    plt.xlabel('Number of Processes', fontsize=14, fontweight='bold')
-    plt.ylabel('Latency (μs)', fontsize=14, fontweight='bold')
-    plt.title(title_name + ': Model vs Experimental Performance', 
-            fontsize=16, fontweight='bold', pad=20)
-    plt.legend(loc=position, fontsize=12, framealpha=0.95, 
-            edgecolor='gray', fancybox=True, shadow=True)
-    plt.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
-    plt.gca().set_facecolor('#FAFAFA')
-
-    # Add subtle frame
-    for spine in plt.gca().spines.values():
-        spine.set_edgecolor('#CCCCCC')
-        spine.set_linewidth(1.5)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_errors(data_exp,  data_theory, overtitle, position1, position2):
-    # Create comprehensive error analysis visualization
-    fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(18, 7))
-    fig.suptitle(overtitle+': Model Error Analysis', fontsize=16, fontweight='bold', y=1.00)
-
-    # Extract experimental data
-    experimental_processes = data_exp['idx_process'].values
-    experimental_latency = data_exp['Latency'].values
-
-    # Extract corresponding model predictions
-    model_latency_aligned = [data_theory[n] for n in experimental_processes]
-
-    # Calculate errors
-    absolute_error = [model - exp for model, exp in zip(model_latency_aligned, experimental_latency)]
-    relative_error = [(model - exp) / exp * 100 for model, exp in zip(model_latency_aligned, experimental_latency)]
-
-    # ===========================
-    # Plot 0: Absolute Error
-    # ===========================
-    ax0.plot(experimental_processes, absolute_error, 
-            marker='s', linestyle='-', linewidth=2.5,
-            color='#E63946', markersize=7, markerfacecolor='white', 
-            markeredgewidth=2, alpha=0.85, label='Absolute Error')
-
-    # Zero reference line
-    ax0.axhline(y=0, color='black', linestyle='-', linewidth=1.5, alpha=0.5, label='Perfect Match')
-
-    # Hardware topology boundaries
-    topology_markers = [
-        (1, 'Same CCX', '#E8E8E8'),
-        (4, 'Same CCD', '#D0D0D0'),
-        (8, 'Same NUMA', '#B8B8B8'),
-        (32, 'Cross NUMA', '#A0A0A0'),
-        (64, 'Cross Socket', '#888888'),
-        (128, 'Inter-Node', '#606060')
-    ]
-
-    for core_id, label, color in topology_markers:
-        ax0.axvline(x=core_id, color=color, linestyle=':', linewidth=2, alpha=0.6)
-        ax0.text(core_id, ax0.get_ylim()[1] * 0.95, label, 
-                rotation=90, verticalalignment='top', horizontalalignment='right',
-                fontsize=10, fontweight='bold', alpha=0.75, color=color,
-                bbox=dict(boxstyle='round,pad=0.25', facecolor='white', alpha=0.7, edgecolor=color))
-
-    # Styling
     ax0.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax0.set_ylabel('Absolute Error (μs)', fontsize=13, fontweight='bold')
-    ax0.set_title('Absolute Error: Model - Experimental', fontsize=14, fontweight='bold', pad=15)
-    ax0.legend(loc=position1, fontsize=11, framealpha=0.95, edgecolor='gray', fancybox=True)
-    ax0.grid(True, alpha=0.3, linestyle='--', linewidth=0.6)
+    ax0.set_ylabel('Latency (μs)', fontsize=13, fontweight='bold')
+    ax0.set_title('Model vs Experimental Performance', fontsize=14, fontweight='bold', pad=15)
+    ax0.legend(loc=position_main, fontsize=11, framealpha=0.95, 
+            edgecolor='gray', fancybox=True, shadow=True)
+    ax0.grid(True, alpha=0.3, linestyle='--', linewidth=0.7)
     ax0.set_facecolor('#FAFAFA')
 
-
-
     # ===========================
-    # Plot 1: Relative Error (%)
+    # Plot 1: Absolute Error
     # ===========================
-    ax1.plot(experimental_processes, relative_error, 
-            marker='o', linestyle='-', linewidth=2.5,
-            color='#F77F00', markersize=7, markerfacecolor='white', 
-            markeredgewidth=2, alpha=0.85, label='Relative Error')
+    ax1.plot(experimental_processes, absolute_error, 
+            marker='s', linestyle='-', linewidth=2.5,
+            color='#E63946', markersize=7, markerfacecolor='white', 
+            markeredgewidth=2, alpha=0.85, label='Error')
 
-    # Zero reference line
     ax1.axhline(y=0, color='black', linestyle='-', linewidth=1.5, alpha=0.5, label='Perfect Match')
 
-    # Acceptable error bands (±5%, ±10%)
-    ax1.axhspan(-5, 5, alpha=0.15, color='green', label='±5% tolerance')
-    ax1.axhspan(-10, 10, alpha=0.1, color='yellow', label='±10% tolerance')
-
-    # Hardware topology boundaries
     for core_id, label, color in topology_markers:
         ax1.axvline(x=core_id, color=color, linestyle=':', linewidth=2, alpha=0.6)
         ax1.text(core_id, ax1.get_ylim()[1] * 0.95, label, 
@@ -184,18 +120,41 @@ def plot_errors(data_exp,  data_theory, overtitle, position1, position2):
                 fontsize=10, fontweight='bold', alpha=0.75, color=color,
                 bbox=dict(boxstyle='round,pad=0.25', facecolor='white', alpha=0.7, edgecolor=color))
 
-    # Styling
     ax1.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
-    ax1.set_ylabel('Relative Error (%)', fontsize=13, fontweight='bold')
-    ax1.set_title('Relative Error: (Model - Experimental) / Experimental × 100', fontsize=14, fontweight='bold', pad=15)
-    ax1.legend(loc=position2, fontsize=11, framealpha=0.95, edgecolor='gray', fancybox=True)
+    ax1.set_ylabel('Error (μs)', fontsize=13, fontweight='bold')
+    ax1.set_title('Error: Model - Experimental', fontsize=14, fontweight='bold', pad=15)
+    ax1.legend(loc=position_abs, fontsize=11, framealpha=0.95, edgecolor='gray', fancybox=True)
     ax1.grid(True, alpha=0.3, linestyle='--', linewidth=0.6)
     ax1.set_facecolor('#FAFAFA')
 
+    # ===========================
+    # Plot 2: Relative Error (%)
+    # ===========================
+    ax2.plot(experimental_processes, relative_error, 
+            marker='o', linestyle='-', linewidth=2.5,
+            color='#F77F00', markersize=7, markerfacecolor='white', 
+            markeredgewidth=2, alpha=0.85, label='Relative Error')
 
+    ax2.axhline(y=0, color='black', linestyle='-', linewidth=1.5, alpha=0.5, label='Perfect Match')
+    ax2.axhspan(-5, 5, alpha=0.15, color='green', label='±5% tolerance')
+    ax2.axhspan(-10, 10, alpha=0.1, color='yellow', label='±10% tolerance')
 
-    # Frame styling for both plots
-    for ax in [ax0, ax1]:
+    for core_id, label, color in topology_markers:
+        ax2.axvline(x=core_id, color=color, linestyle=':', linewidth=2, alpha=0.6)
+        ax2.text(core_id, ax2.get_ylim()[1] * 0.95, label, 
+                rotation=90, verticalalignment='top', horizontalalignment='right',
+                fontsize=10, fontweight='bold', alpha=0.75, color=color,
+                bbox=dict(boxstyle='round,pad=0.25', facecolor='white', alpha=0.7, edgecolor=color))
+
+    ax2.set_xlabel('Number of Processes', fontsize=13, fontweight='bold')
+    ax2.set_ylabel('Relative Error (%)', fontsize=13, fontweight='bold')
+    ax2.set_title('Relative Error: (Model - Experimental) / Experimental × 100', fontsize=14, fontweight='bold', pad=15)
+    ax2.legend(loc=position_rel, fontsize=11, framealpha=0.95, edgecolor='gray', fancybox=True)
+    ax2.grid(True, alpha=0.3, linestyle='--', linewidth=0.6)
+    ax2.set_facecolor('#FAFAFA')
+
+    # Frame styling for all plots
+    for ax in [ax0, ax1, ax2]:
         for spine in ax.spines.values():
             spine.set_edgecolor('#CCCCCC')
             spine.set_linewidth(1.5)
