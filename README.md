@@ -145,8 +145,6 @@ C:.
             parallel_on_columns_code.c
             parallel_on_rows_code
             parallel_on_rows_code.c
-            parallel_with_hierarchy
-            parallel_with_hierarchy.c
             row_mpi_strong_experiment.sh
             row_mpi_weak_experiment.sh
             row_openmp_strong_experiment - Copia.sh
