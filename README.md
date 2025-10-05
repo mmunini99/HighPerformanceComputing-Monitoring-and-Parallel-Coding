@@ -48,7 +48,7 @@ For this task it has been compared **Broadcast** and **Reduce** algorithms and s
 
 
 ## Project 2: 
-For developing a strategy for Mandelbrot Set Parallelization, an **Hybrid MPI** + **OpenMP** strategy has been defined and three version have been tried: by splitting the image on columns, then on rows and finally as an extra, a final trial tentative hierarchical using 2D block decomposition + cyclic pixel distribution (I was curious on how to (try) to improve the algorithms used before).
+For developing a strategy for Mandelbrot Set Parallelization, an **Hybrid MPI** + **OpenMP** strategy has been defined and two versions have been tried: the first startegy is to partition the image by row, while the second one is by column.
 
 
 For all the projects there is an analysis done in Python and a report. In the presentation will be highlighted a problem found during the development.
@@ -112,27 +112,22 @@ C:.
     +---output
     ¦   +---strong_scaling_mpi
     ¦   ¦       mpi_strong_columns.csv
-    ¦   ¦       mpi_strong_hiera.csv
     ¦   ¦       mpi_strong_rows.csv
     ¦   ¦       
     ¦   +---strong_scaling_omp
     ¦   ¦       omp_strong_columns.csv
-    ¦   ¦       omp_strong_hiera.csv
     ¦   ¦       omp_strong_rows.csv
     ¦   ¦       
     ¦   +---weak_scaling_mpi
     ¦   ¦       mpi_weak_columns.csv
-    ¦   ¦       mpi_weak_hiera.csv
     ¦   ¦       mpi_weak_rows.csv
     ¦   ¦       
     ¦   +---weak_scaling_omp
     ¦           omp_weak_columns.csv
-    ¦           omp_weak_hiera.csv
     ¦           omp_weak_rows.csv
     ¦           
     +---photo
     ¦       fractal_column.pgm
-    ¦       fractal_hierarchical.pgm
     ¦       fractal_row.pgm
     ¦       
     +---slurm-output
@@ -144,10 +139,6 @@ C:.
             column_openmp_strong_experiment.sh
             column_openmp_weak_experiment.sh
             get_structured_folder.sh
-            hiera_mpi_strong_experiment.sh
-            hiera_mpi_weak_experiment.sh
-            hiera_openmp_strong_experiment.sh
-            hiera_openmp_weak_experiment.sh
             parallel_on_columns_code
             parallel_on_columns_code.c
             parallel_on_rows_code
