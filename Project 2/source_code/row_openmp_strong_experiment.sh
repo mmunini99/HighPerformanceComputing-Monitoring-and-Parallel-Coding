@@ -30,7 +30,7 @@ for THREADS in {1..128}; do
     export OMP_PLACES=threads
     export OMP_PROC_BIND=true
     
-    EXEC_TIME=$(mpirun -np 1 --map-by socket --bind-to socket \
+    EXEC_TIME=$(mpirun -np 1 --map-by socket --bind-to none \
                 ./parallel_on_rows_code \
                 "${n}" "${n}" \
                 "${X_LEFT}" "${Y_LOWER}" \
