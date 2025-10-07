@@ -13,7 +13,7 @@ OSU_BENCHMARK_DIR="osu-micro-benchmarks-7.4/c/mpi/collective/blocking"
 OSU_REDUCE="$OSU_BENCHMARK_DIR/osu_reduce"
 
 # Benchmarks parameters
-N_replica=5000
+N_replica=7500
 
 # Algorithm n 1 --> 
 echo "number_processes,Size,Latency" > ../output/reduce_var/reduce_algo1_variable_core.csv

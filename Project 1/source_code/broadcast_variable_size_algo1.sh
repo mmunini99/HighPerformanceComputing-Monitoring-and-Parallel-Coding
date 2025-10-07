@@ -13,7 +13,7 @@ OSU_BENCHMARK_DIR="osu-micro-benchmarks-7.4/c/mpi/collective/blocking"
 OSU_BCAST="$OSU_BENCHMARK_DIR/osu_bcast"
 
 # Benchmarks parameters
-N_replica=5000
+N_replica=7500
 
 
 # Algorithm n 1 --> 
