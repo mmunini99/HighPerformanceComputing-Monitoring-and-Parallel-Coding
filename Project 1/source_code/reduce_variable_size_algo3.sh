@@ -8,7 +8,7 @@
 
 module load openMPI/4.1.6
 
-# OSU Benchmark path 
+# OSU-Benchmark path 
 OSU_BENCHMARK_DIR="osu-micro-benchmarks-7.4/c/mpi/collective/blocking"
 OSU_REDUCE="$OSU_BENCHMARK_DIR/osu_reduce"
 
